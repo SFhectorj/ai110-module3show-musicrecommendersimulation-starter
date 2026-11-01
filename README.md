@@ -17,17 +17,42 @@ Replace this paragraph with your own summary of what your version does.
 
 ## How The System Works
 
-Explain your design in plain language.
+### What each `Song` uses
 
-Some prompts to answer:
+- `genre` and `mood` (labels)
+- `energy`, `valence`, `acousticness` (numbers from 0 to 1)
+- `tempo_bpm` and `danceability` are stored but barely used, because they mostly repeat energy.
 
-- What features does each `Song` use in your system
-  - For example: genre, mood, energy, tempo
-- What information does your `UserProfile` store
-- How does your `Recommender` compute a score for each song
-- How do you choose which songs to recommend
+### What `UserProfile` stores
 
-You can include a simple diagram or bullet list if helpful.
+- `favorite_genre`
+- `favorite_mood`
+- `target_energy`
+- `likes_acoustic`
+
+### How a song gets a score
+
+1. Compare the song to the user's profile, one feature at a time.
+2. Energy: the closer to the target, the more points (`1 - |difference|`).
+3. Mood and genre: a bonus if they match exactly.
+4. Acousticness: it fits better if the song's level matches what the user likes.
+5. Add the points with weights (starting guess):
+
+```
+score = 0.35 energy + 0.25 mood + 0.20 genre + 0.12 valence + 0.08 acousticness
+```
+
+Valence needs a `target_valence` field on `UserProfile`, which doesn't exist yet.
+
+### How songs get chosen
+
+1. Score every song in the list.
+2. Sort from highest to lowest score.
+3. Return the top `k` songs, each with a short reason, such as "matches your mood and has similar energy".
+
+```
+UserProfile + all Songs -> score each song -> sort high to low -> top k
+```
 
 ---
 
@@ -68,15 +93,65 @@ You can add more tests in `tests/test_recommender.py`.
 
 ## Sample Recommendation Output
 
-Paste a sample of your recommender's output here as a text block so a reader can see what it produces:
+Output of `python -m src.main` for the default pop/happy profile:
 
 ```
-# e.g.:
-# User profile: genre=indie, mood=chill, energy=low
-# Recommendations:
-#   1. ...
-#   2. ...
-#   3. ...
+Loaded songs: 19
+
+========================================================================
+                          TOP RECOMMENDATIONS
+Profile: genre=pop, mood=happy, energy=0.80, valence=0.75, likes_acoustic=False
+========================================================================
+
+#1  Sunrise City  by Neon Echo
+    Score: 0.98 / 1.00   [pop, happy]
+    Why:
+      - energy 0.82 vs. target 0.80 (+0.34)
+      - mood match: happy (+0.25)
+      - genre match: pop (+0.20)
+      - valence 0.84 vs. target 0.75 (+0.11)
+      - acousticness 0.18 vs. target 0.20 (+0.08)
+------------------------------------------------------------------------
+
+#2  Rooftop Lights  by Indigo Parade
+    Score: 0.77 / 1.00   [indie pop, happy]
+    Why:
+      - energy 0.76 vs. target 0.80 (+0.34)
+      - mood match: happy (+0.25)
+      - genre mismatch: indie pop (+0.00)
+      - valence 0.81 vs. target 0.75 (+0.11)
+      - acousticness 0.35 vs. target 0.20 (+0.07)
+------------------------------------------------------------------------
+
+#3  Gym Hero  by Max Pulse
+    Score: 0.69 / 1.00   [pop, intense]
+    Why:
+      - energy 0.93 vs. target 0.80 (+0.30)
+      - mood mismatch: intense (+0.00)
+      - genre match: pop (+0.20)
+      - valence 0.77 vs. target 0.75 (+0.12)
+      - acousticness 0.05 vs. target 0.20 (+0.07)
+------------------------------------------------------------------------
+
+#4  Concrete Crown  by Rhyme Atlas
+    Score: 0.52 / 1.00   [hip hop, confident]
+    Why:
+      - energy 0.78 vs. target 0.80 (+0.34)
+      - mood mismatch: confident (+0.00)
+      - genre mismatch: hip hop (+0.00)
+      - valence 0.62 vs. target 0.75 (+0.10)
+      - acousticness 0.08 vs. target 0.20 (+0.07)
+------------------------------------------------------------------------
+
+#5  Fiesta Sol  by Los Marea
+    Score: 0.50 / 1.00   [latin, euphoric]
+    Why:
+      - energy 0.88 vs. target 0.80 (+0.32)
+      - mood mismatch: euphoric (+0.00)
+      - genre mismatch: latin (+0.00)
+      - valence 0.92 vs. target 0.75 (+0.10)
+      - acousticness 0.20 vs. target 0.20 (+0.08)
+------------------------------------------------------------------------
 ```
 
 **Screenshot or video** *(optional)*: <!-- Insert a screenshot or demo video link here -->

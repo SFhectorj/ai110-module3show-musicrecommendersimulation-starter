@@ -21,16 +21,32 @@ Prompts:
 
 ## 3. How the Model Works  
 
-Explain your scoring approach in simple language.  
+**The big idea:** the recommender gives every song in the catalog a "how well does this fit you?" grade from 0 to 1, then lists the highest-graded songs first. It never learns or guesses. It just compares each song to what you told it you like, one trait at a time, and adds up the points.
 
-Prompts:  
+**What it knows about you:** your favorite genre, your favorite mood, how energetic you want the music to feel, how bright and positive you want it to sound, and whether you like acoustic (more "unplugged") music.
 
-- What features of each song are used (genre, energy, mood, etc.)  
-- What user preferences are considered  
-- How does the model turn those into a score  
-- What changes did you make from the starter logic  
+**What it knows about each song:** its genre, its mood, and three 0-to-1 measures: energy (calm to intense), valence (sad or dark to cheerful), and acousticness (electronic to unplugged). Tempo and danceability are in the data but not used, because they mostly repeat what energy already says.
 
-Avoid code here. Pretend you are explaining the idea to a friend who does not program.
+**How the points work:** each trait is worth a share of the final grade, and the shares add up to 1.
+
+| Trait | Share of the grade | How it earns points |
+|---|---|---|
+| Energy | 35% | The closer the song's energy is to what you want, the more of the share it gets. |
+| Mood | 25% | All or nothing: full points if the mood is exactly your favorite, zero otherwise. |
+| Genre | 20% | All or nothing, the same way. |
+| Valence (positivity) | 12% | The closer to the brightness you want, the more it gets. |
+| Acousticness | 8% | The closer to what you like (mostly acoustic or mostly not), the more it gets. |
+
+For example, if you want energy 0.80 and a song has 0.82, it is very close, so it gets nearly the whole energy share. If its genre is not your favorite, it gets nothing from the genre share. Add up all five and you have the song's grade.
+
+**Picking the winners:** every song is graded, the list is sorted from highest to lowest, and the top five are shown. Each one comes with a short list of reasons that shows exactly how many points each trait added, including the traits that added nothing, so you can see why a song ranked where it did.
+
+**Choices worth knowing about:**
+
+- Energy counts the most because it is the clearest sign of whether a song suits the moment (workout versus studying). Mood and genre are all-or-nothing bonuses, so a song that matches both will usually beat a song that is only close on energy.
+- Genre matching is strict. "Indie pop" does not count as "pop", so a very similar song can lose the genre points.
+- The weights are starting guesses, not proven values. Changing them changes the rankings, and that is a good thing to experiment with.
+- The starter code only had empty placeholders, so everything above (loading the songs, scoring, ranking and the explanations) is new.
 
 ---
 
